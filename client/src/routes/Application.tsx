@@ -1,18 +1,40 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Text, Button, Group, Slider, LoadingOverlay } from '@mantine/core';
-import { showNotification } from '@mantine/notifications';
+import { Text, Button, Group, Slider, LoadingOverlay, Modal, useMantineTheme, Burger } from '@mantine/core';
 import { v4 as uuidv4 } from 'uuid';
+import { showNotification } from '@mantine/notifications';
 import Webcam from 'react-webcam';
 import { createWorkerFactory, useWorker } from '@shopify/react-web-worker';
+import React, { Component } from "react";
 import '../App.css';
+
 
 const createWorker = createWorkerFactory(() => import('../workers/faceApiWorker'));
 
 export default function Application() {
+	const [opened, setOpened] = useState(false);
+	const theme = useMantineTheme();
+
 	const faceApiWorker = useWorker(createWorker);
 
 	const [ visible, setVisible ] = useState(true);
+	
+
+	/*const AudioPlayer = () => {
+	  const audioRef = useRef(null);
+	
+	  const handlePlay = () => {
+		audioRef.current.play();
+	  };
+	
+	  return (
+		<div>
+		  <button onClick={handlePlay}>Play</button>
+		  <audio ref={audioRef} src="client/src/routes/soundeffect.mp3" />
+		</div>
+	  );
+	};*/
+  
 
 	const [ faceBox, setFaceBox ] = useState({
 		x: 0,
@@ -35,15 +57,48 @@ export default function Application() {
 
 	const [ slouchY, setSlouchY ] = useState(-5);
 	const [ maxSlider, setMaxSlider ] = useState(480);
+	const [ timer, setTimer ] = useState({
+		counter: 0
+	});
 
 	useEffect(() => {
 		if (facePos.y > (slouchY/100)*maxSlider) {
-			return showNotification({
-				title: 'slouching',
-				id: uuidv4(),
-				autoClose: 1000,
-				message: 'sit up straight!!'
-			});
+			setTimer({
+				counter: timer.counter + 1
+			})
+			
+			//just to have a waiting time before it actually says that you are slouching
+			if (timer.counter >= 5) {	
+				setTimer({
+					counter: 0
+				})
+								
+				//const audio = new Audio('client/src/routes/ping.mp3');
+				//audio.play();
+
+				if (Notification.permission !== 'granted') {
+					Notification.requestPermission();
+				  }
+
+				if (Notification.permission === 'granted') {
+					const notification = new Notification('Slouching', {
+					body: 'Sit up straight!'
+					//icon: '/path/to/icon.png'
+					});
+					notification;
+				}
+				
+				return showNotification({
+					title: 'Slouching',
+					id: uuidv4(),
+					autoClose: 1000,
+					message: 'Sit up straight!'
+				 });
+			}
+		} else {
+			setTimer({
+				counter: 0
+			})
 		}
 	}, [ facePos ]);
 
@@ -60,10 +115,13 @@ export default function Application() {
 
 			appState.current = 'initialized';
 		}
+	  
 	}, []);
 
 	return (
 		<>
+
+			
 			<div className='organizer'>
 
 				<div className='screen'>
@@ -81,18 +139,32 @@ export default function Application() {
 					</div>
 				</div>
 
+				<Modal
+					withCloseButton={false}
+					opened={opened}
+					onClose={() => setOpened(false)}
+					title="How to use 早上好中國"
+					overlayColor={theme.colorScheme === 'dark' ? theme.colors.dark[9]: theme.colors.gray[2]}
+					overlayOpacity={0.55}
+					overlayBlur={3}
+					transition="skew-down"
+					transitionDuration={600}
+					transitionTimingFunction="ease"
+				>
+				1. Sit up straight and position the dashed line slightly below the solid line
+				<br/><br/>
+				2. Slouch down and confirm that the dashed line is above the solid line
+				<br/><br/>
+				3. Enjoy the benefits of a proper posture!
+				</Modal>
 				<Group>
-					<Link to='/'>go back</Link>
+					<Link to='/'>Go Back</Link>
 
 					<Slider w={300} onChange={setSlouchY}
 						label={null}
 					/>
-
-					<Button onClick={async () => {
-						console.log(await faceApiWorker.test());
-					}}>
-						DETECT
-					</Button>
+					<Button onClick={() => setOpened(true)}>i</Button>
+					
 				</Group>
 
 			</div>
