@@ -1,13 +1,13 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Text, Menu, Button, createStyles, Group, Slider, LoadingOverlay, Modal, useMantineTheme, Burger } from '@mantine/core';
-import { IconSettings, IconUsers, Icon3dCubeSphere, IconPlanet, IconHome, IconInfoCircle} from '@tabler/icons';
+import { Text, Menu, Button, createStyles, Accordion, Stack, Group, Slider, LoadingOverlay, Modal, Burger } from '@mantine/core';
+import { IonIcon } from '@ionic/react';
+import { home, body, informationCircle } from 'ionicons/icons'
 
 import { v4 as uuidv4 } from 'uuid';
 import { showNotification } from '@mantine/notifications';
 import Webcam from 'react-webcam';
 import { createWorkerFactory, useWorker } from '@shopify/react-web-worker';
-import React, { Component } from "react";
 import '../App.css';
 
 
@@ -16,14 +16,11 @@ const createWorker = createWorkerFactory(() => import('../workers/faceApiWorker'
 export default function Application() {
 	const [openedModal, setOpened] = useState(false);
 	const [openedNav, setOpenedNav] = useState(false);
-	const title = openedNav ? 'Close Nav' : 'Open Nav'
-	const theme = useMantineTheme();
 
 	const faceApiWorker = useWorker(createWorker);
 
 	const [ visible, setVisible ] = useState(true);
 	
-
 	/*const AudioPlayer = () => {
 	  const audioRef = useRef(null);
 	
@@ -46,7 +43,7 @@ export default function Application() {
 			color: theme.white,
 		  },
 		},
-	  }));
+	}));
 	
 	const [ faceBox, setFaceBox ] = useState({
 		x: 0,
@@ -68,14 +65,19 @@ export default function Application() {
 		});
 	}, [ faceBox ]);
 
-	const [ slouchY, setSlouchY ] = useState(-5);
+	const [ slouchY, setSlouchY ] = useState(50);
 	const [ maxSlider, setMaxSlider ] = useState(480);
 	const [ timer, setTimer ] = useState({
 		counter: 0
 	});
 
 	useEffect(() => {
-		if (facePos.y > (slouchY/100)*maxSlider) {
+			function play() {
+					var audio = new Audio('/assets/sounds/soundeffect.mp3');
+					audio.currentTime = 0;
+					audio.play()
+				}
+			if (facePos.y > (slouchY/100)*maxSlider) {
 			setTimer({
 				counter: timer.counter + 1
 			})
@@ -85,20 +87,17 @@ export default function Application() {
 				setTimer({
 					counter: 0
 				})
-								
-				//const audio = new Audio('client/src/routes/ping.mp3');
-				//audio.play();
+				play();			
 
 				if (Notification.permission !== 'granted') {
 					Notification.requestPermission();
 				  }
 
 				if (Notification.permission === 'granted') {
-					const notification = new Notification('Slouching', {
-					body: 'Sit up straight!'
-					//icon: '/path/to/icon.png'
-					});
-					notification;
+					// const notification = new Notification('Slouching', {
+					// body: 'Sit up straight!'
+					// //icon: '/path/to/icon.png'
+					// });
 				}
 				
 				return showNotification({
@@ -111,7 +110,7 @@ export default function Application() {
 		} else {
 			setTimer({
 				counter: 0
-			})
+			});
 		}
 	}, [ facePos ]);
 
@@ -128,13 +127,12 @@ export default function Application() {
 
 			appState.current = 'initialized';
 		}
-	  
 	}, []);
-	const { classes } = useStyles();
+	
 	return (
 		<>
-			<div className='container'>
-				<div className='menu'>
+			{/* <div className='container'> */}
+				{/* <div className='menu'>
 					<Menu shadow="md" width={200}>
 						<Menu.Target>
 							<Button>Toggle Menu</Button>
@@ -142,25 +140,111 @@ export default function Application() {
 
 						<Menu.Dropdown>
 							<Menu.Label>Navigation</Menu.Label>
-							<Menu.Item icon={<IconHome size={14} />}><Link to='/'>Home</Link></Menu.Item>
+							<Menu.Item icon={<IonIcon icon={home} />}><Link to='/'>Home</Link></Menu.Item>
 							<Menu.Item icon={<IconSettings size={14} />}>Settings</Menu.Item>
 							<Menu.Item color = "MediumSeaGreen" icon={<Icon3dCubeSphere size={14} />}>Reminder Room</Menu.Item>
 							<Menu.Item icon={<IconUsers size={14} />}>About</Menu.Item>
 						</Menu.Dropdown>
 					</Menu>
-				</div>
+				</div> */}
 
 				{/*We moved the screen div into here and then did the funky stuff with the other css file. That is why we have teh container and menu classes above.*/}
+			{/* </div> */}
 
-			</div>
-			<div className='organizer'>
-				<div className='screen'>
+			<div className='app-organizer'>
+				<section className='slidebar' style={{ width: `${openedNav ? 350 : 70}px` }} >
+					<Burger
+						size={30}
+						opened={openedNav}
+						onClick={() => setOpenedNav((opend) => !opend)}
+					/>
+					<Accordion
+						variant='filled'
+						radius='md'
+						transitionDuration={500}
+						styles={{
+							item: {
+								// styles added to all items
+								backgroundColor: '#32C383',
+								// border: '1px solid #D2EBE0',
+								border: 'none',
+								color: '#6e6e6e',
+
+								// styles added to expanded item
+								'&[data-active]': {
+									backgroundColor: 'white',
+								},
+							},
+							control: {
+								color: 'white',
+								borderRadius: 10,
+								
+								'&[data-active]': {
+									color: '#32C383',
+									backgroundColor: 'transparent',
+									// backgroundColor: '#4FB286',
+								},
+								':hover': {
+									backgroundColor: 'transparent',
+									// backgroundColor: '#4FB286',
+								},
+							}
+						}}
+					>
+						<Accordion.Item value='Slouch Options'>
+							<Accordion.Control><Text fw={700}>Slouch Options</Text></Accordion.Control>
+							<Accordion.Panel>
+
+								<Stack>
+									<Text fw={700}>Slouch Threshold</Text>
+									<Slider w={275} value={slouchY} onChange={setSlouchY} label={null} />
+								</Stack>
+							</Accordion.Panel>
+						</Accordion.Item>
+
+						<Accordion.Item value='flexibility'>
+							<Accordion.Control>Flexibility</Accordion.Control>
+							<Accordion.Panel>Configure components appearance and behavior with vast amount of settings or overwrite any part of component styles</Accordion.Panel>
+						</Accordion.Item>
+
+						<Accordion.Item value='focus-ring'>
+							<Accordion.Control>No annoying focus ring</Accordion.Control>
+							<Accordion.Panel>With new :focus-visible pseudo-class focus ring appears only when user navigates with keyboard</Accordion.Panel>
+						</Accordion.Item>
+					</Accordion>
+
+					{/* <Menu shadow="md" width={200}>
+						<Menu.Target>
+							<Button variant='subtle' color='gray'>
+							<Text>Stand up</Text>
+							<IonIcon icon={body} />
+						</Button>
+						</Menu.Target>
+
+						<Menu.Dropdown>
+							<Menu.Label>Navigation</Menu.Label>
+							<Menu.Item icon={<IonIcon icon={home} />}><Link to='/'>Home</Link></Menu.Item>
+							<Menu.Item icon={<IconSettings size={14} />}>Settings</Menu.Item>
+							<Menu.Item color = "MediumSeaGreen" icon={<Icon3dCubeSphere size={14} />}>Reminder Room</Menu.Item>
+							<Menu.Item icon={<IconUsers size={14} />}>About</Menu.Item>
+						</Menu.Dropdown>
+					</Menu> */}
+					
+				</section>
+
+				<Button className='info-button' onClick={() => setOpened(true)}>
+					<IonIcon icon={informationCircle} size='small' />
+				</Button>
+
+				{/* <div className='screen' style={{ scale: (openedNav ? 1.1 : 1.4) }}> */}
+				<div className='screen' style={{ transform: (openedNav ? 'scale(-1.2, 1.2)' : 'scale(-1.4, 1.4)') }}>
 					<LoadingOverlay visible={visible} overlayBlur={2} />
 					<Webcam
 						audio={false}
 						id='stream-element'
 						className='camera-stream'
 					/>
+					{/* <div className='slouch-line' style={{ top: (((slouchY*-1)+100)/100)*maxSlider }}></div> */}
 					<div className='slouch-line' style={{ top: (slouchY/100)*maxSlider }}></div>
 					<div className='detection-indicator' style={{ opacity: (faceBox.shown ? 1 : 0), top: faceBox.y }}>
 						<div className='detection-line' style={{ width: faceBox.x }}></div>
@@ -170,37 +254,31 @@ export default function Application() {
 				</div>
 
 				<Modal
-					withCloseButton={false}
 					opened={openedModal}
 					onClose={() => setOpened(false)}
-					title= {<Text fw={750}>"How to use the Wellness Wizard's slouch stopper"</Text>}
-					overlayColor={theme.colorScheme === 'dark' ? theme.colors.dark[9]: theme.colors.gray[2]}
-					overlayOpacity={0.55}
+					title={<Text fw={800}>How To Use</Text>}
+					// overlayColor={theme.colorScheme === 'dark' ? theme.colors.dark[9]: theme.colors.gray[2]}
+					// overlayOpacity={0.55}
 					overlayBlur={3}
-					transition="skew-down"
-					transitionDuration={600}
-					transitionTimingFunction="ease"
+					// transition="skew-down"
+					// transitionDuration={600}
+					// transitionTimingFunction="ease"
+					centered
 				>
-				
-				1. Sit up straight and position the dashed line slightly below the solid line
-				<br/><br/>
-				2. Slouch down and confirm that the dashed line is above the solid line
-				<br/><br/>
-				3. Enjoy the benefits of a proper posture!
+					How to use the Wellness Wizard's slouch stopper
+					<ol>
+						<li>Sit up straight and position the dashed line slightly below the solid line</li>
+						
+						<li>Slouch down and confirm that the dashed line is above the solid line</li>
+						
+						<li>Enjoy the benefits of a proper posture!</li>
+					</ol>
 				</Modal>
 				
 				<Group>
 					{/* <Link to='/'>Go Back</Link> */}
-					<Burger
-						color="#32C383"
-						opened={openedNav}
-						onClick={() => setOpenedNav((o) => !o)}
-						title={title}
-					/>
-					<Slider w={300} onChange={setSlouchY}
-						label={null}
-					/>
-					<Button onClick={() => setOpened(true)}>{<IconInfoCircle size={25} />}</Button>
+					
+					
 					
 				</Group>
 
@@ -214,7 +292,7 @@ async function detectPerson(faceApiWorker:any, setFaceBox:React.Dispatch<React.S
 	// @ts-ignore: ts(2345)
 	const detection = await faceApiWorker.detectFace();
 	if (detection === undefined) {
-		setFaceBox((prevState:any) => ({
+		return setFaceBox((prevState:any) => ({
 			...prevState,
 			shown: false
 		}));

@@ -1,6 +1,6 @@
 import * as faceapi from 'face-api.js';
 
-await faceapi.loadTinyFaceDetectorModel('../models/tiny_face_detector_model-shard1');
+faceapi.loadTinyFaceDetectorModel('../models/tiny_face_detector_model-shard1');
 
 async function test() {
 	await sleep(2000);

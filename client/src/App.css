@@ -1,21 +1,59 @@
-.organizer {
+.app-organizer {
   height: 100vh;
   width: 100vw;
   display: grid;
   place-items: center;
 
-  grid-template-rows: 1fr 100px;
+  grid-template: 1fr auto / auto 1fr;
+
+  --screen-scale: 1.4;
 }
+
+.slidebar {
+  position: relative;
+
+  grid-row: 1 / 3;
+
+  height: 100%;
+  width: 300px;
+  padding: 20px;
+  
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+
+  font-size: 15px;
+  background-color: #32C383;
+
+  transition: width 0.4s ease-in-out;
+}
+
+.slidebar > button {
+  margin: -5px;
+
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.info-button {
+  position: fixed;
+  top: 15px;
+  right: 30px;
+}
+
+/** SCREEN STUFF **/
 
 .screen {
   position: relative;
   border-radius: 15px;
   overflow: hidden;
 
-  transform: scaleX(-1);
-  scale: 1.2;
-
+  /* transform: scaleX(-1);
+  scale: 1.4;*/
+ 
   box-shadow: 0 3px 20px rgba(0,0,0,0.5);
+  transition: transform 0.4s ease-in-out;
 }
 
 .detection-indicator {
@@ -57,4 +95,8 @@
   border-bottom: dashed 3px #32C383;
   
   z-index: 36;
+}
+
+ol > li {
+  margin: 10px;
 }
