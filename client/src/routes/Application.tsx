@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Text, Button, Group, Slider, LoadingOverlay, Modal, useMantineTheme, Burger } from '@mantine/core';
+import { Text, Menu, Button, createStyles, Group, Slider, LoadingOverlay, Modal, useMantineTheme, Burger } from '@mantine/core';
+import { IconSettings, IconUsers, Icon3dCubeSphere, IconPlanet, IconHome, IconInfoCircle} from '@tabler/icons';
+
 import { v4 as uuidv4 } from 'uuid';
 import { showNotification } from '@mantine/notifications';
 import Webcam from 'react-webcam';
@@ -12,7 +14,9 @@ import '../App.css';
 const createWorker = createWorkerFactory(() => import('../workers/faceApiWorker'));
 
 export default function Application() {
-	const [opened, setOpened] = useState(false);
+	const [openedModal, setOpened] = useState(false);
+	const [openedNav, setOpenedNav] = useState(false);
+	const title = openedNav ? 'Close Nav' : 'Open Nav'
 	const theme = useMantineTheme();
 
 	const faceApiWorker = useWorker(createWorker);
@@ -35,7 +39,15 @@ export default function Application() {
 	  );
 	};*/
   
-
+	const useStyles = createStyles((theme) => ({
+		item: {
+		  '&[data-hovered]': {
+			backgroundColor: theme.colors[theme.primaryColor][theme.fn.primaryShade()],
+			color: theme.white,
+		  },
+		},
+	  }));
+	
 	const [ faceBox, setFaceBox ] = useState({
 		x: 0,
 		y: 0,
@@ -48,6 +60,7 @@ export default function Application() {
 		x: 0,
 		y: 0
 	});
+
 	useEffect(() => {
 		setFacePos({
 			x: (faceBox.x + (faceBox.width)/2),
@@ -117,13 +130,30 @@ export default function Application() {
 		}
 	  
 	}, []);
-
+	const { classes } = useStyles();
 	return (
 		<>
+			<div className='container'>
+				<div className='menu'>
+					<Menu shadow="md" width={200}>
+						<Menu.Target>
+							<Button>Toggle Menu</Button>
+						</Menu.Target>
 
-			
+						<Menu.Dropdown>
+							<Menu.Label>Navigation</Menu.Label>
+							<Menu.Item icon={<IconHome size={14} />}><Link to='/'>Home</Link></Menu.Item>
+							<Menu.Item icon={<IconSettings size={14} />}>Settings</Menu.Item>
+							<Menu.Item color = "MediumSeaGreen" icon={<Icon3dCubeSphere size={14} />}>Reminder Room</Menu.Item>
+							<Menu.Item icon={<IconUsers size={14} />}>About</Menu.Item>
+						</Menu.Dropdown>
+					</Menu>
+				</div>
+
+				{/*We moved the screen div into here and then did the funky stuff with the other css file. That is why we have teh container and menu classes above.*/}
+
+			</div>
 			<div className='organizer'>
-
 				<div className='screen'>
 					<LoadingOverlay visible={visible} overlayBlur={2} />
 					<Webcam
@@ -141,9 +171,9 @@ export default function Application() {
 
 				<Modal
 					withCloseButton={false}
-					opened={opened}
+					opened={openedModal}
 					onClose={() => setOpened(false)}
-					title="How to use 早上好中國"
+					title= {<Text fw={750}>"How to use the Wellness Wizard's slouch stopper"</Text>}
 					overlayColor={theme.colorScheme === 'dark' ? theme.colors.dark[9]: theme.colors.gray[2]}
 					overlayOpacity={0.55}
 					overlayBlur={3}
@@ -151,19 +181,26 @@ export default function Application() {
 					transitionDuration={600}
 					transitionTimingFunction="ease"
 				>
+				
 				1. Sit up straight and position the dashed line slightly below the solid line
 				<br/><br/>
 				2. Slouch down and confirm that the dashed line is above the solid line
 				<br/><br/>
 				3. Enjoy the benefits of a proper posture!
 				</Modal>
+				
 				<Group>
-					<Link to='/'>Go Back</Link>
-
+					{/* <Link to='/'>Go Back</Link> */}
+					<Burger
+						color="#32C383"
+						opened={openedNav}
+						onClick={() => setOpenedNav((o) => !o)}
+						title={title}
+					/>
 					<Slider w={300} onChange={setSlouchY}
 						label={null}
 					/>
-					<Button onClick={() => setOpened(true)}>i</Button>
+					<Button onClick={() => setOpened(true)}>{<IconInfoCircle size={25} />}</Button>
 					
 				</Group>
 
@@ -182,12 +219,12 @@ async function detectPerson(faceApiWorker:any, setFaceBox:React.Dispatch<React.S
 			shown: false
 		}));
 
-		return showNotification({
+		/*return showNotification({
 			title: 'Face not detected',
 			id: uuidv4(),
 			autoClose: 1000,
 			message: 'No face recognized'
-		});
+		});*/
 	};
 
 	setFaceBox({
