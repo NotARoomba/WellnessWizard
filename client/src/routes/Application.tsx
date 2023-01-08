@@ -59,7 +59,11 @@ export default function Application({ faceApiWorker }:any) {
 	});
 
 	useEffect(() => {
-		if (maxSlider - facePos.y < (((slouchY*-1)+100)/100)*maxSlider) {
+		console.log(facePos.y);
+		console.log((((slouchY*-1)+100)/100)*maxSlider);
+		console.log(facePos.y > (((slouchY*-1)+100)/100)*maxSlider);
+
+		if (facePos.y > (((slouchY*-1)+100)/100)*maxSlider) {
 			setTimer({
 				counter: timer.counter + 1
 			})
