@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Text, Menu, Button, createStyles, Accordion, Stack, Group, Slider, LoadingOverlay, Modal, Burger } from '@mantine/core';
 import { IonIcon } from '@ionic/react';
-import { home, body, informationCircle } from 'ionicons/icons'
+import { home, body, informationCircle, homeOutline } from 'ionicons/icons'
 
 import { v4 as uuidv4 } from 'uuid';
 import { showNotification } from '@mantine/notifications';
@@ -234,6 +234,10 @@ export default function Application() {
 
 				<Button className='info-button' onClick={() => setOpened(true)}>
 					<IonIcon icon={informationCircle} size='small' />
+				</Button>
+
+				<Button className='home-button' onClick={() => window.location.href = '/'}>
+					<IonIcon icon={homeOutline} size='small' />
 				</Button>
 
 				{/* <div className='screen' style={{ scale: (openedNav ? 1.1 : 1.4) }}> */}

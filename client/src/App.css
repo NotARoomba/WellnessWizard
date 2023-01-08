@@ -42,6 +42,12 @@
   right: 30px;
 }
 
+.home-button {
+  position: fixed;
+  bottom: 15px;
+  right: 30px;
+}
+
 /** SCREEN STUFF **/
 
 .screen {
