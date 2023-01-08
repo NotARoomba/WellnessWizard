@@ -36,7 +36,11 @@ export default function Home({ faceApiWorker }:any) {
 								WellnessWizard's Slouch Stopper
 							</h1>
 							<p className='description'>
-								Add description on how that stuff works
+								In order to detect the user's face, 
+								we implemented the TinyYOLO model and set an interval of half a second between each instance of a user's face being detected. <br/>
+								To detect whether a user is slouching or not, our algorithms compare the y-coordinate of the middle of a user's face with the y-coordinate of the self-imposed dashed line.<br/>
+								If the user’s face is below it for over 10 seconds, we send both an in-website notification and a desktop-wide notification, so you don't need to hold the app in focus. <br/>
+
 							</p>
 						</div>
 					</div>
@@ -49,7 +53,13 @@ export default function Home({ faceApiWorker }:any) {
 								How to use it
 							</h1>
 							<p className='description'>
-								Description on how to use it
+								<ol>
+									<li>Sit up straight and position the dashed line slightly below the solid line</li>
+									
+									<li>Slouch down and confirm that the dashed line is above the solid line</li>
+									
+									<li>Enjoy the benefits of a proper posture!</li>
+								</ol>
 							</p>
 						</div>
 					</div>

@@ -59,7 +59,7 @@ export default function Application({ faceApiWorker }:any) {
 	});
 
 	useEffect(() => {
-		if (maxSlider - facePos.y > (((slouchY*-1)+100)/100)*maxSlider) {
+		if (maxSlider - facePos.y < (((slouchY*-1)+100)/100)*maxSlider) {
 			setTimer({
 				counter: timer.counter + 1
 			})
@@ -80,7 +80,7 @@ export default function Application({ faceApiWorker }:any) {
 					});
 				}
 				
-				return showNotification({
+				showNotification({
 					title: 'Slouching',
 					id: uuidv4(),
 					autoClose: 1000,
