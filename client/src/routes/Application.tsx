@@ -59,32 +59,24 @@ export default function Application({ faceApiWorker }:any) {
 	});
 
 	useEffect(() => {
-		function play() {
-			var audio = new Audio('/assets/sounds/soundeffect.mp3');
-			audio.currentTime = 0;
-			audio.play()
-		}
-
 		if (maxSlider - facePos.y > (((slouchY*-1)+100)/100)*maxSlider) {
 			setTimer({
 				counter: timer.counter + 1
 			})
 			
-			//just to have a waiting time before it actually says that you are slouching
-			if (timer.counter >= 30) {	
+			// just to have a waiting time before it actually says that you are slouching
+			if (timer.counter >= 10) {	
 				setTimer({
 					counter: 0
-				})
-				play();
+				});
 
 				if (Notification.permission !== 'granted') {
 					Notification.requestPermission();
 				  }
 
 				if (Notification.permission === 'granted') {
-					const notification = new Notification('Slouching', {
-					body: 'Sit up straight!'
-					//icon: '/path/to/icon.png'
+					new Notification('Slouching', {
+						body: 'Sit up straight!'
 					});
 				}
 				
@@ -143,7 +135,6 @@ export default function Application({ faceApiWorker }:any) {
 		if (Notification.permission === 'granted') {
 			new Notification('Water Reminder', {
 				body: 'Drink Some Water!'
-				//icon: '/path/to/icon.png'
 			});
 		}
 		showNotification({
@@ -163,7 +154,6 @@ export default function Application({ faceApiWorker }:any) {
 		if (Notification.permission === 'granted') {
 			new Notification('Stertch Reminder', {
 				body: 'Get Up From Your Chair!'
-				//icon: '/path/to/icon.png'
 			});
 		}
 
