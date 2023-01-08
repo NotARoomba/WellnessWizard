@@ -1,49 +1,37 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Text, Menu, Button, createStyles, Accordion, Stack, Group, Slider, LoadingOverlay, Modal, Burger } from '@mantine/core';
+import { Text, Button, Accordion, Stack, Group, Slider, LoadingOverlay, Modal, Burger } from '@mantine/core';
 import { IonIcon } from '@ionic/react';
-import { home, body, informationCircle, homeOutline } from 'ionicons/icons'
+import { home, body, informationCircle, notifications, notificationsOff } from 'ionicons/icons'
 
 import { v4 as uuidv4 } from 'uuid';
 import { showNotification } from '@mantine/notifications';
 import Webcam from 'react-webcam';
-import { createWorkerFactory, useWorker } from '@shopify/react-web-worker';
 import '../App.css';
 
+type AppState = {
+	stretchRemind: boolean;
+	waterRemind: boolean;
+	current: string;
+}
 
-const createWorker = createWorkerFactory(() => import('../workers/faceApiWorker'));
+export default function Application({ faceApiWorker }:any) {
+	const [ openedModal, setOpened ] = useState(false);
+	const [ openedNav, setOpenedNav ] = useState(false);
+	
+	const [ waterRemind, setWaterRemind ] = useState(false);
+	const [ stretchRemind, setStretchRemind ] = useState(false);
 
-export default function Application() {
-	const [openedModal, setOpened] = useState(false);
-	const [openedNav, setOpenedNav] = useState(false);
+	const [ accordionOpen, setAccordionOpen ] = useState<string | null>(null);
+	useEffect(() => {
+		if (!openedNav) {
+			setAccordionOpen(null);
+		}
+	}, [ openedNav ]);
 
-	const faceApiWorker = useWorker(createWorker);
 
 	const [ visible, setVisible ] = useState(true);
-	
-	/*const AudioPlayer = () => {
-	  const audioRef = useRef(null);
-	
-	  const handlePlay = () => {
-		audioRef.current.play();
-	  };
-	
-	  return (
-		<div>
-		  <button onClick={handlePlay}>Play</button>
-		  <audio ref={audioRef} src="client/src/routes/soundeffect.mp3" />
-		</div>
-	  );
-	};*/
-  
-	const useStyles = createStyles((theme) => ({
-		item: {
-		  '&[data-hovered]': {
-			backgroundColor: theme.colors[theme.primaryColor][theme.fn.primaryShade()],
-			color: theme.white,
-		  },
-		},
-	}));
+	const [ mirrorCamera, setMirrorCamera ] = useState(true);
 	
 	const [ faceBox, setFaceBox ] = useState({
 		x: 0,
@@ -52,12 +40,11 @@ export default function Application() {
 		height: 0,
 		shown: false
 	});
-
+	
 	const [ facePos, setFacePos ] = useState({
 		x: 0,
 		y: 0
 	});
-
 	useEffect(() => {
 		setFacePos({
 			x: (faceBox.x + (faceBox.width)/2),
@@ -72,32 +59,33 @@ export default function Application() {
 	});
 
 	useEffect(() => {
-			function play() {
-					var audio = new Audio('/assets/sounds/soundeffect.mp3');
-					audio.currentTime = 0;
-					audio.play()
-				}
-			if (facePos.y > (slouchY/100)*maxSlider) {
+		function play() {
+			var audio = new Audio('/assets/sounds/soundeffect.mp3');
+			audio.currentTime = 0;
+			audio.play()
+		}
+
+		if (maxSlider - facePos.y > (((slouchY*-1)+100)/100)*maxSlider) {
 			setTimer({
 				counter: timer.counter + 1
 			})
 			
 			//just to have a waiting time before it actually says that you are slouching
-			if (timer.counter >= 5) {	
+			if (timer.counter >= 30) {	
 				setTimer({
 					counter: 0
 				})
-				play();			
+				play();
 
 				if (Notification.permission !== 'granted') {
 					Notification.requestPermission();
 				  }
 
 				if (Notification.permission === 'granted') {
-					// const notification = new Notification('Slouching', {
-					// body: 'Sit up straight!'
-					// //icon: '/path/to/icon.png'
-					// });
+					const notification = new Notification('Slouching', {
+					body: 'Sit up straight!'
+					//icon: '/path/to/icon.png'
+					});
 				}
 				
 				return showNotification({
@@ -105,7 +93,7 @@ export default function Application() {
 					id: uuidv4(),
 					autoClose: 1000,
 					message: 'Sit up straight!'
-				 });
+				});
 			}
 		} else {
 			setTimer({
@@ -114,47 +102,84 @@ export default function Application() {
 		}
 	}, [ facePos ]);
 
-	const appState = useRef('uninitialized');
-
+	// @ts-ignore ts(2739)
+	const appState:AppState = useRef('uninitialized');
 	useEffect(() => {
+		if (Notification.permission !== 'granted') {
+			Notification.requestPermission();
+		  }
 		if (appState.current === 'uninitialized') {
-			(async () => {
-				setInterval(async () => {
-					await detectPerson(faceApiWorker, setFaceBox);
-					setVisible(false);
-				}, 750);
-			})();
+			setInterval(async () => {
+				await detectPerson(faceApiWorker, setFaceBox);
+				setVisible(false);
+			}, 750);
+			
+			setInterval(() => {
+				var now = new Date(),
 
+				minutes = now.getMinutes();
+
+				if (minutes === 0) {
+					notifyWater();
+					notifyStretch();
+				}
+				if (minutes === 30) {
+					notifyStretch();
+				}
+				
+			}, 60000);
+		
 			appState.current = 'initialized';
 		}
 	}, []);
+
+	function notifyWater() {
+		if (appState.waterRemind !== true) return;
+
+		if (Notification.permission !== 'granted') {
+			Notification.requestPermission();
+		  }
 	
+		if (Notification.permission === 'granted') {
+			new Notification('Water Reminder', {
+				body: 'Drink Some Water!'
+				//icon: '/path/to/icon.png'
+			});
+		}
+		showNotification({
+			title: 'Water Reminder',
+			id: uuidv4(),
+			autoClose: 60000,
+			message: 'Drink Some Water!'
+		 });
+	}
+	function notifyStretch() {
+		if (appState.stretchRemind !== true) return;
+
+		if (Notification.permission !== 'granted') {
+			Notification.requestPermission();
+		}
+		
+		if (Notification.permission === 'granted') {
+			new Notification('Stertch Reminder', {
+				body: 'Get Up From Your Chair!'
+				//icon: '/path/to/icon.png'
+			});
+		}
+
+		showNotification({
+			title: 'Stretch Reminder',
+			id: uuidv4(),
+			autoClose: 60000,
+			message: 'Get Up From Your Chair!'
+		});
+	}
+
 	return (
 		<>
-			{/* <div className='container'> */}
-				{/* <div className='menu'>
-					<Menu shadow="md" width={200}>
-						<Menu.Target>
-							<Button>Toggle Menu</Button>
-						</Menu.Target>
-
-						<Menu.Dropdown>
-							<Menu.Label>Navigation</Menu.Label>
-							<Menu.Item icon={<IonIcon icon={home} />}><Link to='/'>Home</Link></Menu.Item>
-							<Menu.Item icon={<IconSettings size={14} />}>Settings</Menu.Item>
-							<Menu.Item color = "MediumSeaGreen" icon={<Icon3dCubeSphere size={14} />}>Reminder Room</Menu.Item>
-							<Menu.Item icon={<IconUsers size={14} />}>About</Menu.Item>
-						</Menu.Dropdown>
-					</Menu>
-				</div> */}
-
-				{/*We moved the screen div into here and then did the funky stuff with the other css file. That is why we have teh container and menu classes above.*/}
-			{/* </div> */}
-
 			<div className='app-organizer'>
 				<section className='slidebar' style={{ width: `${openedNav ? 350 : 70}px` }} >
 					<Burger
-						size={30}
 						opened={openedNav}
 						onClick={() => setOpenedNav((opend) => !opend)}
 					/>
@@ -164,13 +189,9 @@ export default function Application() {
 						transitionDuration={500}
 						styles={{
 							item: {
-								// styles added to all items
 								backgroundColor: '#32C383',
-								// border: '1px solid #D2EBE0',
 								border: 'none',
-								color: '#6e6e6e',
-
-								// styles added to expanded item
+								color: '#7c7c7c',
 								'&[data-active]': {
 									backgroundColor: 'white',
 								},
@@ -178,84 +199,115 @@ export default function Application() {
 							control: {
 								color: 'white',
 								borderRadius: 10,
-								
 								'&[data-active]': {
 									color: '#32C383',
 									backgroundColor: 'transparent',
-									// backgroundColor: '#4FB286',
 								},
 								':hover': {
 									backgroundColor: 'transparent',
-									// backgroundColor: '#4FB286',
 								},
 							}
 						}}
-					>
+						value={accordionOpen}
+						onChange={setAccordionOpen}
+					>	
 						<Accordion.Item value='Slouch Options'>
 							<Accordion.Control><Text fw={700}>Slouch Options</Text></Accordion.Control>
 							<Accordion.Panel>
-
 								<Stack>
-									<Text fw={700}>Slouch Threshold</Text>
+									<Text>Slouch Threshold</Text>
 									<Slider w={275} value={slouchY} onChange={setSlouchY} label={null} />
 								</Stack>
 							</Accordion.Panel>
 						</Accordion.Item>
 
 						<Accordion.Item value='flexibility'>
-							<Accordion.Control>Flexibility</Accordion.Control>
-							<Accordion.Panel>Configure components appearance and behavior with vast amount of settings or overwrite any part of component styles</Accordion.Panel>
+							<Accordion.Control><Text fw={700}>Water Reminder</Text></Accordion.Control>
+							<Accordion.Panel>
+								<Stack>
+									<Button onClick={() => {
+										setWaterRemind(prev => !prev);
+										appState.waterRemind = !waterRemind;
+									}}>
+										{waterRemind ? 'Disable' : 'Enable'} Water Reminders
+									</Button>
+
+									<Text>If you toggle this setting, every time it is something o'clock (Every hour), you will recieve a desktop notification that reminds you to drink water!</Text>
+
+									<Group>
+										Currently:  
+										{waterRemind ? <IonIcon icon={notifications} size='small' /> : <IonIcon icon={notificationsOff} size='small' />}
+									</Group>
+								</Stack>
+							</Accordion.Panel>
 						</Accordion.Item>
 
 						<Accordion.Item value='focus-ring'>
-							<Accordion.Control>No annoying focus ring</Accordion.Control>
-							<Accordion.Panel>With new :focus-visible pseudo-class focus ring appears only when user navigates with keyboard</Accordion.Panel>
+							<Accordion.Control><Text fw={700}>Stretch Reminder</Text></Accordion.Control>
+							<Accordion.Panel>
+								<Stack>
+									<Button onClick={() => {
+										setStretchRemind(prev => !prev);
+										appState.stretchRemind = !stretchRemind;
+									}}>
+										{stretchRemind ? 'Disable' : 'Enable'} Stretch Reminders
+									</Button>
+
+									<Text>If you toggle this setting, every time it is something o'clock or half past something (Every thirty minutes), you will receive a desktop notification that reminds you to get up and stretch!</Text>
+
+									<Group>
+										Currently:  
+										{stretchRemind ? <IonIcon icon={notifications} size='small' /> : <IonIcon icon={notificationsOff} size='small' />}
+									</Group>
+								</Stack>
+							</Accordion.Panel>
 						</Accordion.Item>
 					</Accordion>
-
-					{/* <Menu shadow="md" width={200}>
-						<Menu.Target>
-							<Button variant='subtle' color='gray'>
-							<Text>Stand up</Text>
-							<IonIcon icon={body} />
-						</Button>
-						</Menu.Target>
-
-						<Menu.Dropdown>
-							<Menu.Label>Navigation</Menu.Label>
-							<Menu.Item icon={<IonIcon icon={home} />}><Link to='/'>Home</Link></Menu.Item>
-							<Menu.Item icon={<IconSettings size={14} />}>Settings</Menu.Item>
-							<Menu.Item color = "MediumSeaGreen" icon={<Icon3dCubeSphere size={14} />}>Reminder Room</Menu.Item>
-							<Menu.Item icon={<IconUsers size={14} />}>About</Menu.Item>
-						</Menu.Dropdown>
-					</Menu> */}
 					
 				</section>
 
-				<Button className='info-button' onClick={() => setOpened(true)}>
-					<IonIcon icon={informationCircle} size='small' />
-				</Button>
 
-				<Button className='home-button' onClick={() => window.location.href = '/'}>
-					<IonIcon icon={homeOutline} size='small' />
-				</Button>
+				<section className='content'>
+					<Group className='top-buttons'>
+						<Button className='info-button' onClick={() => setOpened(true)}>
+							<IonIcon icon={informationCircle} size='small' />
+						</Button>
 
-				{/* <div className='screen' style={{ scale: (openedNav ? 1.1 : 1.4) }}> */}
-				<div className='screen' style={{ transform: (openedNav ? 'scale(-1.2, 1.2)' : 'scale(-1.4, 1.4)') }}>
-					<LoadingOverlay visible={visible} overlayBlur={2} />
-					<Webcam
-						audio={false}
-						id='stream-element'
-						className='camera-stream'
-					/>
-					{/* <div className='slouch-line' style={{ top: (((slouchY*-1)+100)/100)*maxSlider }}></div> */}
-					<div className='slouch-line' style={{ top: (slouchY/100)*maxSlider }}></div>
-					<div className='detection-indicator' style={{ opacity: (faceBox.shown ? 1 : 0), top: faceBox.y }}>
-						<div className='detection-line' style={{ width: faceBox.x }}></div>
-						<div className='detection-box' style={{ width: faceBox.width, height: faceBox.height }}></div>
-						<div className='detection-line'></div>
+						<Link to=''>
+							<Button className='home-button'>
+								<IonIcon icon={home} size='small' />
+							</Button>
+						</Link>
+					</Group>
+
+					<div className='corner-rounder-outer'>
+						<div className='corner-rounder-inner'></div>
 					</div>
-				</div>
+
+					<div></div>
+
+					<div className='screen' style={{ transform: (mirrorCamera ? (openedNav ? 'scale(-1.2, 1.2)' : 'scale(-1.4, 1.4)') : (openedNav ? 'scale(1.2, 1.2)' : 'scale(1.4, 1.4)')) }}>
+						<LoadingOverlay visible={visible} overlayBlur={2} />
+						<Webcam
+							audio={false}
+							id='stream-element'
+							className='camera-stream'
+						/>
+						<div className='slouch-line' style={{ top: (((slouchY*-1)+100)/100)*maxSlider }}></div>
+						{/* <div className='slouch-line' style={{ top: (slouchY/100)*maxSlider }}></div> */}
+						<div className='detection-indicator' style={{ opacity: (faceBox.shown ? 1 : 0), top: faceBox.y }}>
+							<div className='detection-line' style={{ width: faceBox.x }}></div>
+							<div className='detection-box' style={{ width: faceBox.width, height: faceBox.height }}></div>
+							<div className='detection-line'></div>
+						</div>
+					</div>
+					<Button onClick={() => setMirrorCamera(prev => !prev)}
+						style={{ marginBottom: 0 }}
+					>
+						Mirror Video
+					</Button>
+				</section>
+
 
 				<Modal
 					opened={openedModal}
@@ -278,13 +330,6 @@ export default function Application() {
 						<li>Enjoy the benefits of a proper posture!</li>
 					</ol>
 				</Modal>
-				
-				<Group>
-					{/* <Link to='/'>Go Back</Link> */}
-					
-					
-					
-				</Group>
 
 			</div>
 
