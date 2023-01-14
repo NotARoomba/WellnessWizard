@@ -1,4 +1,4 @@
-
+# Maintainer: NotARoomba <kg5inb1@hotmail.com>
 pkgname=WellnessWizard
 pkgver=1.0.0
 pkgrel=1
@@ -8,9 +8,6 @@ url='https://github.com/halftonenano/Hackathon_gitinit'
 license=('MIT')
 depends=('electron' 'nodejs' 'imagemagick')
 makedepends=('electron' 'nodejs' 'asar' 'imagemagick')
-#source=("https://github.com/halftonenano/Hackathon_gitinit/archive/refs/heads/main.zip")
-#md5sums=("72d1d403d340181cb4f4c2f630940bd7")
-#validpgpkeys=("3F1D0F4F5CB714A85C68C419E9DA3FA40632F32B")
 prepare() {
     rm -rf "${srcdir}"
     mkdir "${srcdir}"
